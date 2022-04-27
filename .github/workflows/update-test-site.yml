@@ -1,0 +1,27 @@
+name: Update test site
+on:
+  workflow_dispatch:
+jobs:
+  update-test-site:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+    - name: Configure SSH
+      run: |
+        mkdir -p ~/.ssh/
+        echo "$KEY" > ~/.ssh/do.key
+        chmod 600 ~/.ssh/do.key
+        cat >>~/.ssh/config <<END
+        Host do
+          HostName 143.198.32.189
+          User sdps
+          IdentityFile ~/.ssh/do.key
+          StrictHostKeyChecking no
+        END
+      env:
+        KEY: ${{ secrets.DO_SSH_KEY }}
+    - name: Copy Makefile
+      run: scp Makefile do:~
+    - name: Update test site
+      run: ssh do 'make'
